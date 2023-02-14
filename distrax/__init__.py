@@ -19,6 +19,7 @@ from distrax._src.bijectors.bijector import Bijector
 from distrax._src.bijectors.bijector import BijectorLike
 from distrax._src.bijectors.block import Block
 from distrax._src.bijectors.chain import Chain
+from distrax._src.bijectors.conditioned_masked_coupling import ConditionedMaskedCoupling
 from distrax._src.bijectors.diag_linear import DiagLinear
 from distrax._src.bijectors.diag_plus_low_rank_linear import DiagPlusLowRankLinear
 from distrax._src.bijectors.gumbel_cdf import GumbelCDF
@@ -44,6 +45,7 @@ from distrax._src.distributions.categorical_uniform import CategoricalUniform
 from distrax._src.distributions.clipped import Clipped
 from distrax._src.distributions.clipped import ClippedLogistic
 from distrax._src.distributions.clipped import ClippedNormal
+from distrax._src.distributions.conditioned_transformed import ConditionedTransformed
 from distrax._src.distributions.deterministic import Deterministic
 from distrax._src.distributions.dirichlet import Dirichlet
 from distrax._src.distributions.distribution import Distribution
@@ -103,6 +105,8 @@ __all__ = (
     "Clipped",
     "ClippedLogistic",
     "ClippedNormal",
+    "ConditionedMaskedCoupling",
+    "ConditionedTransformed",
     "Deterministic",
     "DiagLinear",
     "DiagPlusLowRankLinear",
