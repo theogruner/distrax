@@ -12,17 +12,6 @@ BijectorParams = Any
 
 
 class ConditionedMaskedCoupling(MaskedCoupling):
-    def __init__(
-        self,
-        mask: Array,
-        conditioner: Callable[[Array], BijectorParams],
-        bijector: Callable[[BijectorParams], base.BijectorLike],
-        context_size: int,
-        event_ndims: Optional[int] = None,
-        inner_event_ndims: int = 0,
-    ):
-        super().__init__(mask, conditioner, bijector, event_ndims, inner_event_ndims)
-        self._context_size = context_size
 
     def forward_and_log_det(self, x_context: Array) -> Tuple[Array, Array]:
         """Computes y = f(x) and log|det J(f)(x)|."""
