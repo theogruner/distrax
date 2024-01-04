@@ -29,6 +29,7 @@ PRNGKey = dist_base.PRNGKey
 Array = dist_base.Array
 DistributionLike = dist_base.DistributionLike
 BijectorLike = bjct_base.BijectorLike
+EventT = dist_base.EventT
 
 
 class Transformed(dist_base.Distribution):
@@ -124,12 +125,13 @@ class Transformed(dist_base.Distribution):
 
     self._dtype = shape_dtype.dtype
 
-    # pylint:disable=invalid-unary-operand-type
     if self.bijector.event_ndims_out == 0:
       self._event_shape = ()
       self._batch_shape = shape_dtype.shape
     else:
+      # pylint: disable-next=invalid-unary-operand-type
       self._event_shape = shape_dtype.shape[-self.bijector.event_ndims_out:]
+      # pylint: disable-next=invalid-unary-operand-type
       self._batch_shape = shape_dtype.shape[:-self.bijector.event_ndims_out]
 
   @property
@@ -137,6 +139,7 @@ class Transformed(dist_base.Distribution):
     """See `Distribution.dtype`."""
     if self._dtype is None:
       self._infer_shapes_and_dtype()
+    assert self._dtype is not None  # By _infer_shapes_and_dtype()
     return self._dtype
 
   @property
@@ -144,6 +147,7 @@ class Transformed(dist_base.Distribution):
     """See `Distribution.event_shape`."""
     if self._event_shape is None:
       self._infer_shapes_and_dtype()
+    assert self._event_shape is not None  # By _infer_shapes_and_dtype()
     return self._event_shape
 
   @property
@@ -151,9 +155,10 @@ class Transformed(dist_base.Distribution):
     """See `Distribution.batch_shape`."""
     if self._batch_shape is None:
       self._infer_shapes_and_dtype()
+    assert self._batch_shape is not None  # By _infer_shapes_and_dtype()
     return self._batch_shape
 
-  def log_prob(self, value: Array) -> Array:
+  def log_prob(self, value: EventT) -> Array:
     """See `Distribution.log_prob`."""
     x, ildj_y = self.bijector.inverse_and_log_det(value)
     lp_x = self.distribution.log_prob(x)

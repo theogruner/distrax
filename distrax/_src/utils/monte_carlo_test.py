@@ -62,16 +62,20 @@ class McTest(absltest.TestCase):
       distribution = normal.Normal(
           loc=np.zeros((4, 5, 100)),
           scale=np.ones((4, 5, 100)))
+      # pytype: disable=wrong-arg-types
       mode_estimate = monte_carlo.mc_estimate_mode(
           distribution, rng_key=42, num_samples=100)
+      # pytype: enable=wrong-arg-types
       mean_mode_estimate = np.abs(np.mean(mode_estimate))
       self.assertLess(mean_mode_estimate, 1e-3)
     with self.subTest('NonScalarEventShape'):
       distribution = mvn_diag.MultivariateNormalDiag(
           loc=np.zeros((4, 5, 100)),
           scale_diag=np.ones((4, 5, 100)))
+      # pytype: disable=wrong-arg-types
       mv_mode_estimate = monte_carlo.mc_estimate_mode(
           distribution, rng_key=42, num_samples=100)
+      # pytype: enable=wrong-arg-types
       mean_mv_mode_estimate = np.abs(np.mean(mv_mode_estimate))
       self.assertLess(mean_mv_mode_estimate, 1e-1)
       # The mean of the mode-estimate of the Normal should be a lot closer
@@ -105,8 +109,9 @@ def _check_kl_estimator(estimator_fn, distribution_fn, num_samples=10000,
   value, grad = jax.value_and_grad(estimate_kl)(params)
 
   np.testing.assert_allclose(expected_value, value, rtol=rtol, atol=atol)
-  chex.assert_tree_all_close(expected_grad, grad, rtol=grad_rtol,
-                             atol=grad_atol)
+  chex.assert_trees_all_close(
+      expected_grad, grad, rtol=grad_rtol, atol=grad_atol
+  )
 
 
 if __name__ == '__main__':

@@ -53,6 +53,16 @@ from absl import logging
 import jax
 import jax.numpy as jnp
 
+# pylint: disable=g-import-not-at-top
+# pytype: disable=import-error
+try:
+  # jax >= 0.4.16
+  from jax.extend import linear_util as lu
+except ImportError:
+  from jax import linear_util as lu
+# pytype: enable=import-error
+# pylint: enable=g-import-not-at-top
+
 
 _inverse_registry = {
     # unary ops
@@ -258,7 +268,7 @@ def _interpret_inverse(jaxpr, consts, *args):
     # if primitive is an xla_call, get subexpressions and evaluate recursively
     call_jaxpr, params = _extract_call_jaxpr(eqn.primitive, params)
     if call_jaxpr:
-      subfuns = [jax.linear_util.wrap_init(
+      subfuns = [lu.wrap_init(
           functools.partial(_interpret_inverse, call_jaxpr, ()))]
       prim_inv = eqn.primitive
 

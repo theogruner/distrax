@@ -14,7 +14,7 @@
 # ==============================================================================
 """OneHotCategorical distribution."""
 
-from typing import Optional, Tuple
+from typing import Any, Optional, Tuple, Union
 
 import chex
 from distrax._src.distributions import categorical
@@ -29,6 +29,7 @@ tfd = tfp.distributions
 
 Array = chex.Array
 PRNGKey = chex.PRNGKey
+EventT = distribution.EventT
 
 
 class OneHotCategorical(categorical.Categorical):
@@ -39,7 +40,7 @@ class OneHotCategorical(categorical.Categorical):
   def __init__(self,
                logits: Optional[Array] = None,
                probs: Optional[Array] = None,
-               dtype: jnp.dtype = int):
+               dtype: Union[jnp.dtype, type[Any]] = int):
     """Initializes a OneHotCategorical distribution.
 
     Args:
@@ -68,21 +69,22 @@ class OneHotCategorical(categorical.Categorical):
         draws, num_classes=self.num_categories).astype(self._dtype)
     return jnp.where(is_valid, draws_one_hot, jnp.ones_like(draws_one_hot) * -1)
 
-  def log_prob(self, value: Array) -> Array:
+  def log_prob(self, value: EventT) -> Array:
     """See `Distribution.log_prob`."""
     return jnp.sum(math.multiply_no_nan(self.logits, value), axis=-1)
 
-  def prob(self, value: Array) -> Array:
+  def prob(self, value: EventT) -> Array:
     """See `Distribution.prob`."""
     return jnp.sum(math.multiply_no_nan(self.probs, value), axis=-1)
 
   def mode(self) -> Array:
     """Calculates the mode."""
     preferences = self._probs if self._logits is None else self._logits
+    assert preferences is not None
     greedy_index = jnp.argmax(preferences, axis=-1)
     return jax.nn.one_hot(greedy_index, self.num_categories).astype(self._dtype)
 
-  def cdf(self, value: Array) -> Array:
+  def cdf(self, value: EventT) -> Array:
     """See `Distribution.cdf`."""
     return jnp.sum(math.multiply_no_nan(
         jnp.cumsum(self.probs, axis=-1), value), axis=-1)

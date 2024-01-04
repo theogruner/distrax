@@ -39,7 +39,7 @@ IntLike = Union[int, np.int16, np.int32, np.int64]
 # Generic type.
 T = TypeVar('T')
 # Generic nested type.
-NestedT = Union[T, Iterable['NestedT'], Mapping[Any, 'NestedT']]
+NestedT = Union[T, Iterable['NestedT'], Mapping[Any, 'NestedT']]  # pylint: disable=invalid-name
 # Nested types.
 EventT = TypeVar('EventT', bound=NestedT[Array])
 ShapeT = TypeVar('ShapeT', bound=NestedT[Tuple[int, ...]])
@@ -319,12 +319,12 @@ def convert_seed_and_sample_shape(
     sample_shape = (sample_shape,)
   sample_shape = tuple(map(int, sample_shape))
 
-  if isinstance(seed, IntLike.__args__):
+  if isinstance(seed, (int, np.signedinteger)):
     rng = jax.random.PRNGKey(seed)
   else:  # key is of type PRNGKey
     rng = seed
 
-  return rng, sample_shape
+  return rng, sample_shape  # type: ignore[bad-return-type]
 
 
 def to_batch_shape_index(

@@ -14,7 +14,7 @@
 # ==============================================================================
 """Categorical distribution."""
 
-from typing import Optional, Tuple, Union
+from typing import Any, Optional, Tuple, Union
 
 import chex
 from distrax._src.distributions import distribution
@@ -27,6 +27,7 @@ tfd = tfp.distributions
 
 Array = chex.Array
 PRNGKey = chex.PRNGKey
+EventT = distribution.EventT
 
 
 class Categorical(distribution.Distribution):
@@ -37,7 +38,7 @@ class Categorical(distribution.Distribution):
   def __init__(self,
                logits: Optional[Array] = None,
                probs: Optional[Array] = None,
-               dtype: jnp.dtype = int):
+               dtype: Union[jnp.dtype, type[Any]] = int):
     """Initializes a Categorical distribution.
 
     Args:
@@ -97,18 +98,20 @@ class Categorical(distribution.Distribution):
                                    shape=new_shape).astype(self._dtype)
     return jnp.where(is_valid, draws, jnp.ones_like(draws) * -1)
 
-  def log_prob(self, value: Array) -> Array:
+  def log_prob(self, value: EventT) -> Array:
     """See `Distribution.log_prob`."""
-    value_one_hot = jax.nn.one_hot(value, self.num_categories)
+    value_one_hot = jax.nn.one_hot(
+        value, self.num_categories, dtype=self.logits.dtype)
     mask_outside_domain = jnp.logical_or(
         value < 0, value > self.num_categories - 1)
     return jnp.where(
         mask_outside_domain, -jnp.inf,
         jnp.sum(math.multiply_no_nan(self.logits, value_one_hot), axis=-1))
 
-  def prob(self, value: Array) -> Array:
+  def prob(self, value: EventT) -> Array:
     """See `Distribution.prob`."""
-    value_one_hot = jax.nn.one_hot(value, self.num_categories)
+    value_one_hot = jax.nn.one_hot(
+        value, self.num_categories, dtype=self.probs.dtype)
     return jnp.sum(math.multiply_no_nan(self.probs, value_one_hot), axis=-1)
 
   def entropy(self) -> Array:
@@ -124,7 +127,7 @@ class Categorical(distribution.Distribution):
     parameter = self._probs if self._logits is None else self._logits
     return jnp.argmax(parameter, axis=-1).astype(self._dtype)
 
-  def cdf(self, value: Array) -> Array:
+  def cdf(self, value: EventT) -> Array:
     """See `Distribution.cdf`."""
     # For value < 0 the output should be zero because support = {0, ..., K-1}.
     should_be_zero = value < 0
@@ -134,12 +137,13 @@ class Categorical(distribution.Distribution):
     should_be_one = value >= self.num_categories - 1
     # Will use value as an index below, so clip it to {0, ..., K-1}.
     value = jnp.clip(value, 0, self.num_categories - 1)
-    value_one_hot = jax.nn.one_hot(value, self.num_categories)
+    value_one_hot = jax.nn.one_hot(
+        value, self.num_categories, dtype=self.probs.dtype)
     cdf = jnp.sum(math.multiply_no_nan(
         jnp.cumsum(self.probs, axis=-1), value_one_hot), axis=-1)
     return jnp.where(should_be_zero, 0., jnp.where(should_be_one, 1., cdf))
 
-  def log_cdf(self, value: Array) -> Array:
+  def log_cdf(self, value: EventT) -> Array:
     """See `Distribution.log_cdf`."""
     return jnp.log(self.cdf(value))
 
